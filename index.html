@@ -3,54 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>להקשבה - מקומות שקטים</title>
+    <title>להקשבה - שעות שקטות</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#007bff">
-    
+    <meta name="theme-color" content="#4A90E2">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        h1 { color: #333; }
-        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 50px; transition: 0.3s; width: 100%; }
-        button:hover { background: #0056b3; }
-        #status { margin-top: 20px; color: #666; line-height: 1.6; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f0f4f8; margin: 0; padding: 20; color: #333; }
+        .header { background: #4A90E2; color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; }
+        .container { max-width: 500px; margin: 20px auto; padding: 10px; }
+        .search-box { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .business-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-right: 5px solid #2ecc71; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .business-card h3 { margin: 0 0 5px 0; color: #2c3e50; }
+        .business-card p { margin: 5px 0; font-size: 14px; color: #7f8c8d; }
+        .tag { background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .btn-gps { background: #4A90E2; color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>בדיקת GPS - להקשבה</h1>
-        <p>לחץ על הכפתור כדי לראות איך המערכת מזהה אותך</p>
-        <button onclick="getLocation()">בדוק מיקום כעת</button>
-        <p id="status">ממתין לפקודה...</p>
+
+<div class="header">
+    <h1>להקשבה</h1>
+    <p>מוצאים שקט במרחב העירוני</p>
+</div>
+
+<div class="container">
+    <div class="search-box">
+        <button class="btn-gps" onclick="findNearby()">🔍 חפש מקומות שקטים קרובים אלי</button>
+        <p id="status" style="text-align:center; font-size:13px;"></p>
     </div>
 
-    <script>
-        // רישום ה-Service Worker (חובה ל-PWA)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('SW Registered!', reg))
-                    .catch(err => console.error('SW Failed!', err));
-            });
+    <div id="resultsList">
+        </div>
+</div>
+
+<script>
+    // נתונים לדוגמה (במציאות זה יגיע מבסיס נתונים)
+    const businesses = [
+        { name: "קפה שקט", lat: 31.252, lon: 34.791, hours: "16:00-18:00", address: "רינגלבלום, באר שבע" },
+        { name: "ספריית העיר", lat: 31.255, lon: 34.795, hours: "כל היום", address: "מרכז העיר" },
+        { name: "סופר-מרקט נגיש", lat: 31.248, lon: 34.789, hours: "08:00-09:00", address: "שכונה ב'" }
+    ];
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
+    function findNearby() {
+        const status = document.getElementById('status');
+        const list = document.getElementById('resultsList');
+        
+        if (!navigator.geolocation) {
+            status.textContent = "ה-GPS לא נתמך במכשירך";
+            return;
         }
 
-        function getLocation() {
-            const status = document.getElementById('status');
-            if (!navigator.geolocation) {
-                status.textContent = "הדפדפן לא תומך ב-GPS";
-            } else {
-                status.innerHTML = "📍 מאתר מיקום...";
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        status.innerHTML = `✅ <b>נמצאת!</b><br>קו רוחב: ${position.coords.latitude.toFixed(4)}<br>קו אורך: ${position.coords.longitude.toFixed(4)}`;
-                    },
-                    (error) => {
-                        status.innerHTML = "❌ שגיאה: " + error.message;
-                    },
-                    { enableHighAccuracy: true }
-                );
-            }
-        }
-    </script>
+        status.textContent = "מאתר מיקום ומחשב מרחקים...";
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            const userLat = position.coords.latitude;
+            const userLon = position.coords.longitude;
+            
+            status.textContent = "נמצאו מקומות קרובים עם תג הקשבה:";
+            list.innerHTML = "";
+
+            businesses.forEach(biz => {
+                const dist = calculateDistance(userLat, userLon, biz.lat, biz.lon);
+                list.innerHTML += `
+                    <div class="business-card">
+                        <h3>${biz.name} <span class="tag">תג הקשבה</span></h3>
+                        <p>📍 ${biz.address} (${dist.toFixed(1)} ק"מ ממך)</p>
+                        <p>🕒 שעות שקטות היום: <b>${biz.hours}</b></p>
+                    </div>
+                `;
+            });
+        }, () => {
+            status.textContent = "לא הצלחנו לקבל מיקום. וודא שה-GPS פועל.";
+        });
+    }
+
+    // פונקציה פשוטה לחישוב מרחק
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        return Math.sqrt(Math.pow(lat1-lat2, 2) + Math.pow(lon1-lon2, 2)) * 111;
+    }
+</script>
+
 </body>
 </html>
