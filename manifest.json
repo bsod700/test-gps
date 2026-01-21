@@ -1,13 +1,13 @@
 {
-  "name": "להקשבה - שעות שקטות",
+  "name": "להקשבה - שקט עירוני",
   "short_name": "להקשבה",
-  "start_url": "index.html",
+  "start_url": "/index.html",
   "display": "standalone",
-  "background_color": "#f0f4f8",
+  "background_color": "#ffffff",
   "theme_color": "#4A90E2",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3655/3655610.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/684/684908.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
