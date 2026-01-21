@@ -3,54 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>להקשבה - מקומות שקטים</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#007bff">
-    
+    <title>להקשבה - אתר נגישות</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; background-color: #f4f7f6; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        h1 { color: #333; }
-        button { padding: 15px 30px; font-size: 18px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 50px; transition: 0.3s; width: 100%; }
-        button:hover { background: #0056b3; }
-        #status { margin-top: 20px; color: #666; line-height: 1.6; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            background-color: #eef2f3; 
+        }
+        .container { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            max-width: 500px; 
+            margin: auto; 
+        }
+        h1 { color: #2c3e50; }
+        .btn { 
+            padding: 15px 25px; 
+            font-size: 18px; 
+            background-color: #27ae60; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            width: 100%;
+        }
+        #output { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #f9f9f9; 
+            border: 1px solid #ddd;
+            min-height: 50px;
+        }
+        .info { font-size: 0.9em; color: #7f8c8d; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>בדיקת GPS - להקשבה</h1>
-        <p>לחץ על הכפתור כדי לראות איך המערכת מזהה אותך</p>
-        <button onclick="getLocation()">בדוק מיקום כעת</button>
-        <p id="status">ממתין לפקודה...</p>
+
+    <div class="container">
+        <h1>מנוע חיפוש - להקשבה</h1>
+        <p>גרסת WebApp (דפדפן)</p>
+        
+        <button class="btn" onclick="findMe()">חפש עסקים קרובים אלי</button>
+        
+        <div id="output">המיקום שלך יופיע כאן</div>
+        
+        <p class="info">* שים לב: בגרסת אתר, הדפדפן עשוי לבקש הרשאה בכל כניסה מחדש.</p>
     </div>
 
     <script>
-        // רישום ה-Service Worker (חובה ל-PWA)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('SW Registered!', reg))
-                    .catch(err => console.error('SW Failed!', err));
-            });
-        }
-
-        function getLocation() {
-            const status = document.getElementById('status');
+        function findMe() {
+            const output = document.getElementById('output');
+            
             if (!navigator.geolocation) {
-                status.textContent = "הדפדפן לא תומך ב-GPS";
-            } else {
-                status.innerHTML = "📍 מאתר מיקום...";
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        status.innerHTML = `✅ <b>נמצאת!</b><br>קו רוחב: ${position.coords.latitude.toFixed(4)}<br>קו אורך: ${position.coords.longitude.toFixed(4)}`;
-                    },
-                    (error) => {
-                        status.innerHTML = "❌ שגיאה: " + error.message;
-                    },
-                    { enableHighAccuracy: true }
-                );
+                output.innerHTML = "הדפדפן שלך לא תומך במיקום.";
+                return;
             }
+
+            output.innerHTML = "מאתר מיקום...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    output.innerHTML = `📍 המיקום שלך:<br>קו רוחב: ${lat}<br>קו אורך: ${lon}`;
+                },
+                (error) => {
+                    output.innerHTML = "שגיאה בקבלת מיקום: " + error.message;
+                }
+            );
         }
     </script>
+
 </body>
 </html>
