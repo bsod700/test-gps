@@ -3,112 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>להקשבה | מציאת שקט</title>
+    <title>להקשבה | מוצאים שקט קרוב</title>
+    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4A90E2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/684/684908.png">
-    
+
     <style>
-        :root { --primary: #4A90E2; --bg: #f8f9fa; --text: #2d3436; }
-        body { font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
-        .app-container { max-width: 500px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
-        header { background: var(--primary); color: white; padding: 30px 20px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .main-content { padding: 20px; flex: 1; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; width: 100%; border-radius: 15px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3); transition: transform 0.2s; }
-        .btn-main:active { transform: scale(0.98); }
-        .status-msg { text-align: center; margin: 15px 0; font-size: 14px; color: #636e72; min-height: 20px; }
-        .results { margin-top: 10px; }
-        .card { background: white; padding: 18px; border-radius: 16px; margin-bottom: 15px; border-right: 6px solid #00b894; box-shadow: 0 2px 8px rgba(0,0,0,0.05); animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card h3 { margin: 0 0 8px 0; font-size: 18px; }
-        .card .meta { font-size: 13px; color: #b2bec3; display: flex; justify-content: space-between; }
-        .quiet-tag { background: #e1f5fe; color: #0288d1; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        :root { --primary: #4A90E2; --success: #2ecc71; --bg: #f4f7f9; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; padding: 0; }
+        header { background: var(--primary); color: white; padding: 25px; text-align: center; border-radius: 0 0 20px 20px; }
+        .content { padding: 20px; max-width: 500px; margin: auto; }
+        
+        /* כפתור חיפוש */
+        .search-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 16px; width: 100%; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        
+        /* תוצאות */
+        .results-area { margin-top: 20px; }
+        .biz-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-right: 5px solid var(--success); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        /* באנר התקנה */
+        #installBanner { 
+            display: none; position: fixed; bottom: 20px; left: 5%; width: 90%; 
+            background: white; padding: 15px; border-radius: 15px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2); z-index: 1000;
+            justify-content: space-between; align-items: center;
+        }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <header>
-        <h1>להקשבה</h1>
-        <p>מוצאים את המקום השקט הקרוב אליך</p>
-    </header>
+<header>
+    <h1>להקשבה</h1>
+    <p>מנוע חיפוש למקומות עם תג הקשבה</p>
+</header>
 
-    <div class="main-content">
-        <button class="btn-main" onclick="getFastLocation()">🔍 חפש מקומות שקטים עכשיו</button>
-        <div id="status" class="status-msg"></div>
-        <div id="results" class="results"></div>
+<div class="content">
+    <div class="search-card">
+        <button class="btn-main" onclick="startSearch()">🔍 חפש שקט סביבי</button>
+        <p id="status" style="margin-top:10px; color:#666; font-size:14px;"></p>
     </div>
+
+    <div id="results" class="results-area"></div>
+</div>
+
+<div id="installBanner">
+    <div style="display:flex; align-items:center;">
+        <img src="https://cdn-icons-png.flaticon.com/512/684/684908.png" width="30" style="margin-left:10px;">
+        <span id="installText">התקן את האפליקציה למסך</span>
+    </div>
+    <button id="installBtn" style="background:var(--primary); color:white; border:none; padding:8px 12px; border-radius:8px;">התקן</button>
 </div>
 
 <script>
-    const mockData = [
-        { id: 1, name: "בית קפה 'הנשיא'", lat: 31.252, lon: 34.791, hours: "16:00-19:00", dist: 0 },
-        { id: 2, name: "מרכז קהילתי ארץעיר", lat: 31.258, lon: 34.798, hours: "09:00-12:00", dist: 0 },
-        { id: 3, name: "ספרייה עירונית", lat: 31.245, lon: 34.785, hours: "כל היום", dist: 0 }
-    ];
+    // 1. רישום Service Worker וניהול התקנה
+    let deferredPrompt;
+    const banner = document.getElementById('installBanner');
 
-    // רישום SW
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
     }
 
-    function getFastLocation() {
+    // זיהוי אם המשתמש באייפון
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+
+    if (isIos && !isStandalone) {
+        document.getElementById('installText').innerText = "להתקנה: לחץ על 'שתף' ואז 'הוסף למסך הבית'";
+        document.getElementById('installBtn').style.display = 'none';
+        banner.style.display = 'flex';
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        banner.style.display = 'flex';
+    });
+
+    document.getElementById('installBtn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') banner.style.display = 'none';
+        deferredPrompt = null;
+    });
+
+    // 2. לוגיקת ה-GPS הטובה ביותר
+    function startSearch() {
         const status = document.getElementById('status');
         const results = document.getElementById('results');
-        status.innerText = "מאתר מיקום...";
+        status.innerText = "מאתר מיקום מיידי...";
 
-        // ה-Best Practice למיקום מהיר:
         const geoOptions = {
-            enableHighAccuracy: true, // דיוק גבוה (GPS)
-            timeout: 10000,           // מחכה עד 10 שניות
-            maximumAge: 300000        // שימוש במיקום מה-5 דקות האחרונות (מונע איטיות!)
+            enableHighAccuracy: true,
+            timeout: 8000,
+            maximumAge: 60000 // שימוש במיקום מהדקה האחרונה לטעינה מיידית
         };
 
-        navigator.geolocation.getCurrentPosition(success, error, geoOptions);
-
-        function success(pos) {
-            const { latitude, longitude } = pos.coords;
-            status.innerText = "נמצאו מקומות שקטים בקרבתך:";
-            renderResults(latitude, longitude);
-        }
-
-        function error(err) {
-            console.warn(err);
-            status.innerText = "לא הצלחנו לאתר מיקום מדויק. מציג רשימה כללית.";
-            renderResults(31.25, 34.79); // ברירת מחדל
-        }
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                status.innerText = "נמצאו מקומות קרובים:";
+                displayResults(pos.coords.latitude, pos.coords.longitude);
+            },
+            (err) => {
+                status.innerText = "לא הצלחנו לאתר מיקום מדויק. מציג מקומות בבאר שבע.";
+                displayResults(31.25, 34.79);
+            }, 
+            geoOptions
+        );
     }
 
-    function renderResults(lat, lon) {
-        const results = document.getElementById('results');
-        results.innerHTML = "";
+    function displayResults(lat, lon) {
+        const data = [
+            { name: "קפה רינגלבלום", hours: "16:00-18:00", lat: 31.252, lon: 34.791 },
+            { name: "ספרייה מרכזית", hours: "כל היום", lat: 31.255, lon: 34.795 }
+        ];
         
-        mockData.map(item => {
-            const d = calculateDistance(lat, lon, item.lat, item.lon);
-            return { ...item, dist: d };
-        }).sort((a,b) => a.dist - b.dist).forEach(item => {
-            results.innerHTML += `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3>${item.name}</h3>
-                        <span class="quiet-tag">שעה שקטה</span>
-                    </div>
-                    <p style="margin: 5px 0;">📍 מרחק: ${item.dist.toFixed(2)} ק"מ</p>
-                    <div class="meta">
-                        <span>שעות פעילות: ${item.hours}</span>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const p = 0.017453292519943295; 
-        const c = Math.cos;
-        const a = 0.5 - c((lat2 - lat1) * p)/2 + c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p))/2;
-        return 12742 * Math.asin(Math.sqrt(a)); 
+        const results = document.getElementById('results');
+        results.innerHTML = data.map(item => `
+            <div class="biz-card">
+                <div style="font-weight:bold;">${item.name}</div>
+                <div style="font-size:13px; color:#777;">שעות שקטות: ${item.hours}</div>
+            </div>
+        `).join('');
     }
 </script>
-
 </body>
 </html>
